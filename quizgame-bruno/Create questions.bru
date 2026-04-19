@@ -4,6 +4,15 @@ meta {
   seq: 1
 }
 
-get {
-  url: 
+put {
+  url: {{baseURL}}/1
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "question": "Updated question?",
+    "answer": "Updated answer"
+  }
 }
