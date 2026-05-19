@@ -18,9 +18,10 @@ model User {
 
 model Question {
   id       Int       @id @default(autoincrement())
-  question    String   
+  question    String  @db.VarChar(255) 
   answer     String
   imageUrl String?  @db.VarChar(255)
+  keywords Keyword[]
   userId   Int
   user     User @relation(fields: [userId], references: [id])
   attempts Attempt[]
@@ -36,10 +37,15 @@ model Attempt {
   questionId Int
   question    Question @relation(fields: [questionId], references: [id])
 
-  @@map("attemps")
-
 }
 
+model Keyword {
+  id    Int    @id @default(autoincrement())
+  name  String @unique @db.VarChar(100)
+  question Question[]
+
+  @@map("keywords")
+}
 
 
 

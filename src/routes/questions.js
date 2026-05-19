@@ -4,8 +4,15 @@ const prisma = require("../lib/prisma");
 const authenticate = require("../middleware/auth");
 const isOwner = require("../middleware/isOwner");
 const path = require("path");
-
 const multer = require("multer");
+const {NotFoundError, ValidationError} = require("../lib/errors");
+const { z } = require("zod");
+
+const QuestionInput = z.object({
+  question: z.string().min(1),
+  answer: z.string().min(1),
+});
+
 
 const storage = multer.diskStorage({
   destination: path.join(__dirname, "..", "..", "public", "uploads"),
@@ -77,15 +84,18 @@ router.get("/", async (req, res) => {
 //show specific question
 router.get("/:questionsId", async (req, res) => {
   const questionsId = Number(req.params.questionsId);
+
+  if (isNaN(questionsId) || questionsId < 1) {
+    throw new NotFoundError("Question not found");
+  }
+
   const question = await prisma.question.findUnique({
     where: { id: questionsId },
     include: {user: true, attempts: true},
   });
 
   if (!question) {
-    return res.status(404).json({
-      message: "Question not found"
-    });
+    throw new NotFoundError("Question not found");
   }
   
   res.json(formatQuestion(question, req.user.userId));
@@ -94,20 +104,23 @@ router.get("/:questionsId", async (req, res) => {
 
 //POST
 router.post("/", upload.single("image"), async (req, res) => {
-    const {question, answer} = req.body;
 
-    if (!question || !answer ) {
-        return res.status(400).json({msg:"question and answer are required"})
-    }
+    const {question, answer} = QuestionInput.parse(req.body);
 
     const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+
+    if (question.length > 255) {
+        throw new ValidationError("Question is too long");
+    }
 
     const newQuestion = await prisma.question.create({
       data: { question, answer, imageUrl, userId: req.user.userId, },
       include: {user: true},
       }); 
-      
-      res.status(201).json(formatQuestion(newQuestion));
+
+      res.status(201).json(formatQuestion(newQuestion, req.user.userId
+
+      ));
 });
 
 //POST/play
@@ -116,7 +129,7 @@ router.post("/:questionsId/play", async (req, res) => {
   const { answer } = req.body;
 
   if (!answer) {
-    return res.status(400).json({ msg: "Answer is required" });
+    throw new ValidationError("answer is required" );
   }
 
   const question = await prisma.question.findUnique({
@@ -124,7 +137,7 @@ router.post("/:questionsId/play", async (req, res) => {
   });
 
   if (!question) {
-    return res.status(404).json({ msg: "Question not found" });
+    throw new NotFoundError("Question not found");
   }
 
   const isCorrect =
@@ -154,12 +167,12 @@ router.post("/:questionsId/play", async (req, res) => {
 //isOwner checks existence and ownership
 router.put("/:questionsId", upload.single("image"), isOwner, async (req, res) => {
     const questionsId = Number(req.params.questionsId);
-    const {question, answer} = req.body;
+    const {question, answer} = QuestionInput.parse(req.body);
 
     const existingQuestion = await prisma.question.findUnique({where: {id: questionsId} });
 
     if (!existingQuestion) {
-      return res.status(404).json({msg: "question and answer are mandatory"});
+      throw new ValidationError("question and answer are mandatory");
     }
 
     const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
@@ -170,7 +183,8 @@ router.put("/:questionsId", upload.single("image"), isOwner, async (req, res) =>
       include: {user: true},
     });
 
-    res.json(formatQuestion(updatedQuestion));
+
+    res.json(formatQuestion(updatedQuestion, req.user.userId));
   });
 
 
@@ -183,12 +197,12 @@ router.delete("/:questionsId", isOwner, async (req, res) => {
     });
 
     if (!question) {
-        return res.status(404).json({msg:"question not found"})
+        throw new NotFoundError("Question not found");
     }
     await prisma.question.delete({where: {id: questionsId } });
 
     res.json({msg:"Question deleted successfully",
-        question:(formatQuestion(question)),
+        question:(formatQuestion(question, req.user.userId)),
     });
 });   
 

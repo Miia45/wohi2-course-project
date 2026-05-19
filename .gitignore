@@ -1,5 +1,8 @@
 node_modules
 .env
+.env.test
+coverage/
+.DS_Store
 /src/generated/prisma
 prisma/migrations
 public/uploads*
