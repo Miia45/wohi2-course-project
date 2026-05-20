@@ -3,24 +3,24 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model User {
   id       Int    @id @default(autoincrement())
-  email    String @unique @db.VarChar(255)
-  password String @db.VarChar(255)
-  name     String @db.VarChar(100)
+  email    String @unique 
+  password String 
+  name     String 
   questions    Question[]
   attempts Attempt[]
 }
 
 model Question {
   id       Int       @id @default(autoincrement())
-  question    String  @db.VarChar(255) 
+  question    String   
   answer     String
-  imageUrl String?  @db.VarChar(255)
+  imageUrl String?  
   keywords Keyword[]
   userId   Int
   user     User @relation(fields: [userId], references: [id])
@@ -30,7 +30,7 @@ model Question {
 model Attempt {
   id       Int    @id @default(autoincrement())
   createdAt DateTime @default(now())
-  submittedAnswer String @db.VarChar(255)
+  submittedAnswer String 
   correct Boolean
   userId   Int
   user     User @relation(fields: [userId], references: [id])
@@ -41,7 +41,7 @@ model Attempt {
 
 model Keyword {
   id    Int    @id @default(autoincrement())
-  name  String @unique @db.VarChar(100)
+  name  String @unique 
   question Question[]
 
   @@map("keywords")
