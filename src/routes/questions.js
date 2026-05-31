@@ -81,6 +81,116 @@ router.get("/", async (req, res) => {
 });
 
 //GET
+//random question
+//api/questions/random?count=10
+router.get("/random", async (req, res) => {
+  const count = Math.min(
+    50,
+    Math.max(1, parseInt(req.query.count) || 10)
+  );
+
+  const questions = await prisma.question.findMany({
+    include: { user: true, attempts: true, },
+  });
+
+  const shuffled = questions.sort(() => 0.5 - Math.random());
+
+  const selected = shuffled.slice(0, count);
+
+  const formatted = selected.map((q) => ({
+    id: q.id,
+    question: q.question,
+    imageUrl: q.imageUrl,
+    userName: q.user?.name || null,
+    attemptsCount: q.attempts.length,
+  }));
+
+  res.json({
+    count: formatted.length,
+    data: formatted,
+  });
+
+});
+
+//GET 
+//api/leaderboard
+router.get("/leaderboard", async (req, res) => {
+
+  try {
+    console.log("leaderboard route hit");
+  
+  const users = await prisma.user.findMany({
+    include: {
+      attempts: true,
+    },
+  });
+
+  console.log(users);
+
+  const leaderboard = users
+    .map((user) => ({
+      userId: user.id,
+      name: user.name,
+      score: user.attempts.filter((a) => a.correct).length,
+    }))
+    .sort((a, b) => b.score - a.score);
+
+  res.json(leaderboard); 
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({error: err.message});
+  }
+
+});
+
+//GET
+//api/users/me/stats
+router.get("/stats", async (req, res) => {
+  const userId = req.user.userId;
+
+  const questionsCreated = await prisma.question.count({
+    where: {
+      userId,
+    },
+  });
+
+  const attempts = await prisma.attempt.count({
+    where: {
+      userId,
+    },
+  });
+
+  const correctAnswers = await prisma.attempt.count({
+    where: {
+      userId,
+      correct: true,
+    },
+  });
+
+  const solvedQuestions = await prisma.attempt.groupBy({
+  by: ["questionId"],
+  where: {
+    userId,
+    correct: true,
+  },
+  });
+
+  const accuracy =
+    attempts === 0
+      ? 0
+      : Math.round((correctAnswers / attempts) * 100);
+
+  res.json({
+    questionsCreated,
+    attempts,
+    correctAnswers,
+    questionsSolved: solvedQuestions.length,
+    accuracy,
+  });
+});
+
+//GET
 //show specific question
 router.get("/:questionsId", async (req, res) => {
   const questionsId = Number(req.params.questionsId);
@@ -163,7 +273,7 @@ router.post("/:questionsId/play", async (req, res) => {
   });
 });
 
-//PUT /api/questions/:quetionsId
+//PUT /api/questions/:questionsId
 //isOwner checks existence and ownership
 router.put("/:questionsId", upload.single("image"), isOwner, async (req, res) => {
     const questionsId = Number(req.params.questionsId);
@@ -188,7 +298,7 @@ router.put("/:questionsId", upload.single("image"), isOwner, async (req, res) =>
   });
 
 
-//DELETE /api/quetions/:quetionsId
+//DELETE /api/quetions/:questionsId
 router.delete("/:questionsId", isOwner, async (req, res) => {
     const questionsId = Number(req.params.questionsId);
     const question = await prisma.question.findUnique({

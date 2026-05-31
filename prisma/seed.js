@@ -2,39 +2,10 @@ const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcrypt");
 const prisma = new PrismaClient();
 
-
-const seedQuestion = [
-  {
-    question: "What art form is described as decorative handwriting or handwritten lettering?",
-    answer: "Calligraphy",
-    keywords: ["art"],
-  },
-  {
-    question: "Who was the Ancient Greek God of the Sun?",
-    answer: "Apollo",
-    keywords: ["history"],
-  },
-  {
-    question: "What is a word, phrase, number, or other sequence of characters that reads the same backward as forward?",
-    answer: "Palindrome",
-    keywords: ["general"],
-  },
-  {
-    question: "Which animal sleeps standing up and can’t vomit? ",
-    answer: "Horse",
-    keywords: ["general"],
-  },
-  {
-    question: "Which country invented French fries?",
-    answer: "Belgium",
-    keywords: ["general"],
-  },
-];
-
 async function main() {
+  await prisma.attempt.deleteMany();
   await prisma.question.deleteMany();
   await prisma.user.deleteMany();
-  await prisma.keyword.deleteMany();
 
   const hashedPassword = await bcrypt.hash("1234", 10);
   const user = await prisma.user.create({
@@ -47,23 +18,64 @@ async function main() {
   
   console.log("Created user:", user.email);
 
-  for (const question of seedQuestion) {
-    await prisma.question.create({
-      data: {
-        question: question.question,
-        answer: question.answer,
-        userId: user.id,
-        keywords: {
-          connectOrCreate: question.keywords.map((kw) => ({
-            where: {name: kw},
-            create: {name: kw},
-      })),
-    },
-  },
-});
-  }
 
+  await prisma.question.createMany({ 
+    data: [
+      {
+        question: "What art form is described as decorative handwriting or handwritten lettering?",
+        answer: "Calligraphy",
+        userId: user.id,
+      },
+      {
+        question: "Who was the Ancient Greek God of the Sun?",
+        answer: "Apollo",
+        userId: user.id,
+      },
+      {
+        question: "What is a word, phrase, number, or other sequence of characters that reads the same backward as forward?",
+        answer: "Palindrome",
+        userId: user.id,
+      },
+      {
+        question: "Which animal sleeps standing up and can’t vomit? ",
+        answer: "Horse",
+        userId: user.id,
+      },
+      {
+        question: "Which country invented French fries?",
+        answer: "Belgium",
+        userId: user.id,
+      },
+      {
+        question: "2 + 2?",
+        answer: "4",
+        userId: user.id,
+      },
+      {
+        question: "Largest planet?",
+        answer: "Jupiter",
+        userId: user.id,
+      },
+      {
+        question: "HTML stands for?",
+        answer: "HyperText Markup Language",
+        userId: user.id,
+      },
+      {
+        question: "Fastest land animal is...?",
+        answer: "Cheetah",
+        userId: user.id,
+      },
+      {
+        question: "Capital of Japan?",
+        answer: "Tokyo",
+        userId: user.id,
+      },
+    ],
+  });
+  
   console.log("Seed data inserted successfully");
+
 }
 
 main()
@@ -71,5 +83,8 @@ main()
     console.error(e);
     process.exit(1);
   })
-  .finally(() => prisma.$disconnect());
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
+
 

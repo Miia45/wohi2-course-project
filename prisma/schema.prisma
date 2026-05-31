@@ -21,7 +21,6 @@ model Question {
   question    String   
   answer     String
   imageUrl String?  
-  keywords Keyword[]
   userId   Int
   user     User @relation(fields: [userId], references: [id])
   attempts Attempt[]
@@ -39,13 +38,6 @@ model Attempt {
 
 }
 
-model Keyword {
-  id    Int    @id @default(autoincrement())
-  name  String @unique 
-  question Question[]
-
-  @@map("keywords")
-}
 
 
 

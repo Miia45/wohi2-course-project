@@ -1,6 +1,11 @@
 // --- State ---
 let isRegisterMode = false;
 
+//random quiz state
+let quizQuestions = [];
+let currentQuestionIndex = 0;
+let quizScore = 0;
+
 // --- Helpers ---
 function getCurrentUserId() {
   const token = getToken();
@@ -140,6 +145,9 @@ async function loadQuestions(keyword = "", page = 1) {
       </div>
       <div class="toolbar">
         <button class="btn btn-primary" id="new-question-btn">+ New Question</button>
+        <button class="btn btn-primary" id="random-quiz-btn">? Play Random Quiz</button>
+        <button class="btn btn-primary" id="leaderboard-btn">🏆 Leaderboard</button>
+        <button class="btn btn-primary" id="stats-btn"> My Stats</button>
         <div class="search-bar">
           <input type="text" id="keyword-input" placeholder="Search by keyword..." value="${keyword}" />
           <button class="btn btn-search" id="search-btn">Search</button>
@@ -194,6 +202,15 @@ async function loadQuestions(keyword = "", page = 1) {
     container.innerHTML = html;
 
     document.getElementById("new-question-btn").addEventListener("click", () => showQuestionForm());
+
+    //random quiz button 
+    document.getElementById("random-quiz-btn").addEventListener("click", () => loadRandomQuiz());
+
+    //leaderboard button
+    document.getElementById("leaderboard-btn").addEventListener("click", () => loadLeaderboard());
+
+    //stats button
+    document.getElementById("stats-btn").addEventListener("click", () => loadStats());
 
     document.getElementById("search-btn").addEventListener("click", () => {
       loadQuestions(document.getElementById("keyword-input").value.trim(), 1);
@@ -285,6 +302,212 @@ async function loadQuestionDetail(qId) {
   }
 }
 
+//Random Quiz 
+async function loadRandomQuiz() {
+  try {
+    const result = await apiFetch(
+      `${CONFIG.ROUTES.QUESTIONS}/random?count=10`
+    );
+
+    quizQuestions = result.data;
+    currentQuestionIndex = 0;
+    quizScore = 0;
+
+    renderQuizQuestion();
+
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+//leaderboard
+async function loadLeaderboard() {
+  const container = document.getElementById("questions-container");
+
+  try {
+    const leaderboard = await apiFetch(
+      `${CONFIG.ROUTES.QUESTIONS}/leaderboard`
+    );
+
+    const first = leaderboard[0];
+    const second = leaderboard[1];
+    const third = leaderboard[2];
+
+    const rest = leaderboard.slice(3);
+
+    container.innerHTML = `
+      <h2>🏆 Leaderboard</h2>
+
+      <div class="leaderboard-podium">
+
+        ${
+          second
+            ? `
+          <div class="podium-card second">
+            <div class="medal">🥈</div>
+            <div class="name">${second.name}</div>
+            <div class="score">${second.score} pts</div>
+          </div>
+        `
+            : ""
+        }
+
+        ${
+          first
+            ? `
+          <div class="podium-card first">
+            <div class="medal">🥇</div>
+            <div class="name">${first.name}</div>
+            <div class="score">${first.score} pts</div>
+          </div>
+        `
+            : ""
+        }
+
+        ${
+          third
+            ? `
+          <div class="podium-card third">
+            <div class="medal">🥉</div>
+            <div class="name">${third.name}</div>
+            <div class="score">${third.score} pts</div>
+          </div>
+        `
+            : ""
+        }
+
+      </div>
+
+      ${
+        rest.length
+          ? `
+        <table class="leaderboard-table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Player</th>
+              <th>Score</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${rest
+              .map(
+                (user, index) => `
+                  <tr>
+                    <td>${index + 4}</td>
+                    <td>${user.name}</td>
+                    <td>${user.score} pts</td>
+                  </tr>
+                `
+              )
+              .join("")}
+          </tbody>
+        </table>
+      `
+          : ""
+      }
+
+      <div style="margin-top:2rem;">
+        <button id="back-btn" class="btn btn-primary">
+          Back to Questions
+        </button>
+      </div>
+    `;
+
+    document
+      .getElementById("back-btn")
+      .addEventListener("click", () => loadQuestions());
+
+  } catch (err) {
+    container.innerHTML = `<p class="error">${err.message}</p>`;
+  }
+}
+
+//stats funktio
+async function loadStats() {
+  const container = document.getElementById(
+    "questions-container"
+  );
+
+  try {
+    const stats = await apiFetch(
+      `${CONFIG.ROUTES.QUESTIONS}/stats`
+    );
+
+    container.innerHTML = `
+      <h2>Statistics</h2>
+
+      <div class="stats-grid">
+
+        <div class="stats-card">
+          <div class="stats-value">
+            ${stats.questionsCreated}
+          </div>
+          <div class="stats-label">
+            Questions Created
+          </div>
+        </div>
+
+        <div class="stats-card">
+          <div class="stats-value">
+            ${stats.attempts}
+          </div>
+          <div class="stats-label">
+            Attempts
+          </div>
+        </div>
+
+        <div class="stats-card">
+          <div class="stats-value">
+            ${stats.correctAnswers}
+          </div>
+          <div class="stats-label">
+            Correct Answers
+          </div>
+        </div>
+
+        <div class="stats-card">
+          <div class="stats-value">
+            ${stats.accuracy}%
+          </div>
+          <div class="stats-label">
+            Accuracy
+          </div>
+        </div>
+
+        <div class="stats-card">
+          <div class="stats-value">
+            ${stats.questionsSolved}
+          </div>
+          <div class="stats-label">
+            Solved Questions
+          </div>
+        </div>
+
+      </div>
+
+      <button
+        id="back-btn"
+        class="btn btn-primary"
+      >
+        Back
+      </button>
+    `;
+
+    document
+      .getElementById("back-btn")
+      .addEventListener("click", () =>
+        loadQuestions()
+      );
+
+  } catch (err) {
+    container.innerHTML =
+      `<p class="error">${err.message}</p>`;
+  }
+}
+
+
 // --- Create / Edit ---
 async function showQuestionForm(qId) {
   const container = document.getElementById("questions-container");
@@ -355,6 +578,147 @@ async function showQuestionForm(qId) {
       errorEl.textContent = err.message;
     }
   });
+}
+
+//random quiz
+function renderQuizQuestion() {
+  const container = document.getElementById("questions-container");
+  const q = quizQuestions[currentQuestionIndex];
+
+  container.innerHTML = `
+    <div class="question-form-wrapper">
+      <h2>Random Quiz</h2>
+
+      <p>Question ${currentQuestionIndex + 1} / ${quizQuestions.length}</p>
+
+      <div class="play-question-text">
+        ${q.question}
+      </div>
+
+      <div class="quiz-answer-group">
+        <label for="quiz-answer">Your Answer</label>
+        <input
+          type="text"
+          id="quiz-answer"
+          class="quiz-answer-input"
+          placeholder="Type your answer here..."
+          autocomplete="off"
+        />
+      </div>
+
+      <button id="submit-quiz-answer" class="quiz-submit-btn">
+        Submit
+      </button>
+
+      <div id="quiz-feedback"><div>
+    </div>
+  `;
+  document
+  .getElementById("submit-quiz-answer")
+  .addEventListener("click", submitQuizAnswer);
+
+  document
+  .getElementById("quiz-answer")
+  .addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      submitQuizAnswer();
+    }
+  });
+}
+
+//submit quiz answer
+async function submitQuizAnswer() {
+  const q = quizQuestions[currentQuestionIndex];
+
+  const feedback = document.getElementById("quiz-feedback");
+
+  const answer = document
+    .getElementById("quiz-answer")
+    .value
+    .trim();
+
+  if (!answer) {
+    feedback.innerHTML = `
+    <div class="quiz-feedback-enter-answer">
+    Please enter an answer!
+    </div
+    `;
+    return;
+  }
+
+  try {
+    const result = await apiFetch(
+      `${CONFIG.ROUTES.QUESTIONS}/${q.id}/play`,
+      {
+        method: "POST",
+        body: JSON.stringify({ answer }),
+      }
+    );
+
+    if (result.correct) {
+      quizScore++;
+      feedback.innerHTML = `
+      <div class="quiz-feedback correct">
+      Correct answer!
+      </div
+      `;
+    } else {
+      feedback.innerHTML = `
+      <div class="quiz-feedback incorrect">
+      Incorrect answer! Correct answer was:
+      <strong>${result.correctAnswer}<strong>
+      <div>
+      `;
+    }
+
+    setTimeout(() => {
+      nextQuizQuestion();
+    }, 1500);
+
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+//next question
+function nextQuizQuestion() {
+  currentQuestionIndex++;
+
+  if (currentQuestionIndex >= quizQuestions.length) {
+    showQuizResults();
+    return;
+  }
+
+  renderQuizQuestion();
+}
+
+//show results
+function showQuizResults() {
+  const container = document.getElementById("questions-container");
+
+  container.innerHTML = `
+    <div class="question-form-wrapper">
+      <h2>Quiz Finished!</h2>
+
+      <p>
+        You scored
+        <strong>${quizScore}</strong>
+        out of
+        <strong>${quizQuestions.length}</strong>
+      </p>
+
+      <button id="back-to-questions" class="back-to-questions-btn">
+        Back to Questions
+      </button>
+    </div>
+  `;
+
+  document
+    .getElementById("back-to-questions")
+    .addEventListener("click", () => {
+      loadQuestions();
+    });
 }
 
 // --- Play ---

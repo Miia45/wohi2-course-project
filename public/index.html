@@ -592,6 +592,187 @@
       padding: 2rem;
       color: #888;
     }
+
+    /*random-quiz styles */
+    .quiz-feedback {
+      margin-top: 1rem;
+      padding: 1rem;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .quiz-feedback.correct {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .quiz-feedback.incorrect {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .quiz-answer-group {
+      margin: 1.5rem 0;
+    }
+
+    .quiz-answer-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    .quiz-answer-input {
+      width: 100%;
+      padding: 0.9rem 1rem;
+      border: 2px solid #d1d5db;
+      border-radius: 10px;
+      font-size: 1rem;
+      transition: all 0.2s ease;
+      box-sizing: border-box;
+    }
+
+    .quiz-answer-input:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+    }
+
+    .quiz-submit-btn {
+      width: 100%;
+      padding: 0.9rem;
+      margin-top: 1rem;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+
+      background: #2563eb;
+      color: white;
+
+      transition: all 0.2s ease;
+    }
+
+    .quiz-submit-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .quiz-submit-btn:active {
+      transform: translateY(0);
+    }
+
+    .back-to-questions-btn {
+      width: 100%;
+      padding: 0.9rem;
+      margin-top: 1rem;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+
+      background: #2563eb;
+      color: white;
+    }
+
+    .back-to-questions-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .back-to.questions-btn:active {
+      transform: translateY(0);
+    }
+
+    /*leaderboard*/
+    .leaderboard-podium {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 1rem;
+      margin-bottom: 2rem 0;
+    }
+
+    .podium-card {
+      min-width: 140px;
+      padding: 1rem;
+      text-align: center;
+      border-radius: 12px;
+      background: #5183ee;
+      box-shadow: 0 4px 12px rgba(0,0,0,.1);
+    }
+
+    .podium-card.first {
+      min-height: 180px;
+    }
+
+    .podium-card.second {
+      min-height: 150px;
+    }
+
+    .podium-card.third {
+      min-height: 130px;
+    }
+
+    .medal {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .name {
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .score {
+      font-size: 1.1rem;
+      color: #2563eb;
+      font-weight: 600;
+    }
+
+    .leaderboard-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 2rem;
+    }
+
+    .leaderboard-table th,
+    .leaderboard-table td {
+      padding: 0.9rem;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+    }
+
+    /*stats*/
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(
+        auto-fit,
+        minmax(180px, 1fr)
+      );
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+
+    .stats-card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,.1);
+    }
+
+    .stats-value {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #2563eb;
+    }
+
+    .stats-label {
+      margin-top: 0.5rem;
+      color: #666;
+    }
+
   </style>
 </head>
 <body>
